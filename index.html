@@ -5,151 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>貸款試算 APP V0.1</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: serif;
-            background-color: #c9e2f0;
-            padding: 24px;
-            color: #07341d;
-            text-align: center;
-        }
-
-        h1,
-        h2 {
-            font-size: 2.5rem;
-            color: #063e5f;
-            margin-bottom: 1rem;
-        }
-
-        h2 {
-            text-align: left;
-            font-size: 1.5rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-        }
-
-        .loan-form,
-        .result {
-            background-color: white;
-            border-radius: 10px;
-            margin-bottom: 24px;
-            padding: 24px;
-            box-shadow: 10px 10px;
-
-        }
-
-        .form-row {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 16px;
-            text-align: left;
-        }
-
-        .form-row label {
-            width: 90px;
-            font-weight: bold;
-            color: #063e5f;
-        }
-
-        input[type="number"],
-        select {
-            padding: 8px 10px;
-            border: 1px solid #b0d4ee;
-            border-radius: 6px;
-            font-size: 1rem;
-            width: 180px;
-        }
-
-        #clacBtn {
-            width: 100%;
-            padding: 12px;
-            margin-top: 20px;
-            font-size: 1rem;
-            font-weight: 900;
-            border-radius: 6px;
-            border: none;
-            background-color: #2589c9;
-            color: white;
-            cursor: pointer;
-            /* 過渡動畫搭配hover */
-            transition: background-color 0.2s;
-        }
-
-        #clacBtn:hover {
-            background-color: #0f4a6e;
-        }
-
-        input[type="radio"] {
-            width: 16px;
-            height: 16px;
-            accent-color: #2589c9;
-        }
-
-        .result {
-            box-shadow: 10px 10px rgb(83, 133, 133);
-        }
-
-        .summary-table,
-        .detail-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 24px;
-        }
-
-        .detail-table th {
-            background-color: #063e5f;
-            color: white;
-            padding: 10px;
-            text-align: center;
-        }
-
-        .detail-table td {
-            padding: 8px 10px;
-            border-bottom: 1px solid #e5f6ff;
-        }
-
-        .detail-table tr:nth-child(even) {
-            background-color: lightgrey;
-            color: navy;
-        }
-
-        .summary-table th {
-            background-color: #2589c9;
-            color: white;
-        }
-
-        .summary-table th,
-        .summary-table td {
-            border: 1px solid #e5f6ff;
-            padding: 10px 12px;
-            text-align: left;
-        }
-
-        .summary-table td:first-child {
-            color: #063e5f;
-            font-weight: bold;
-        }
-
-        .subtitle {
-            font: 0.5em sans-serif;
-            color: #6a8ba2;
-            font-weight: 400;
-            letter-spacing: 1px;
-        }
-    </style>
-
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/utils.js"></script>
 
 </head>
 
@@ -195,7 +52,10 @@
 
         </form>
 
-        <h2>| 試算結果</h2>
+        <h2>| 試算結果
+            <button id="exportBtn" type="button">輸出CSV</button>
+
+        </h2>
         <div class="result">
 
 
@@ -210,35 +70,36 @@
                 <tbody>
                     <tr>
                         <td>每月還款金額</td>
-                        <td id="monthlyPayment">6666</td>
+                        <td id="monthlyPayment"></td>
                     </tr>
                     <tr>
                         <td>總還款金額</td>
-                        <td id="totalPayment">16666</td>
+                        <td id="totalPayment"></td>
                     </tr>
                     <tr>
                         <td>總利息支出</td>
-                        <td id="totalInterest">12323232</td>
+                        <td id="totalInterest"></td>
                     </tr>
                 </tbody>
             </table>
 
-            <!--分期明細表格-->
-            <table border="1" class="detail-table">
-                <thead>
-                    <tr>
-                        <th>期數</th>
-                        <th>月付金額</th>
-                        <th>本金</th>
-                        <th>利息</th>
-                        <th>剩餘本金</th>
-                    </tr>
-                </thead>
-                <tbody id="scheduleBody">
+            <div id="table-scroll">
+                <!--分期明細表格-->
+                <table border="1" class="detail-table">
+                    <thead>
+                        <tr>
+                            <th>期數</th>
+                            <th>月付金額</th>
+                            <th>本金</th>
+                            <th>利息</th>
+                            <th>剩餘本金</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scheduleBody">
 
-                </tbody>
-            </table>
-
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -255,12 +116,47 @@
         //title.innerHTML = "<b style='background-color:blue'>超級助手!</b>";
 
         //.querySelector 查詢id => #id名稱
+
         //全域
+        let schedules = [];
         const amountEl = document.querySelector("#amount");
         const rateEl = document.querySelector("#rate");
         const loanYearsEl = document.querySelector("#loanYears");
         const clacBtnEl = document.querySelector("#clacBtn");
-        console.log(amountEl, rateEl, loanYearsEl, clacBtnEl);
+        const exportBtnEl = document.querySelector("#exportBtn");
+
+        console.log(amountEl, rateEl, loanYearsEl, clacBtnEl, exportBtnEl);
+
+        // 輸出CSV按鈕    
+        exportBtnEl.addEventListener("click", function (e) {
+
+            console.log(schedules);
+
+            if (schedules.length == 0) {
+                alert("目前無資料，請先計算!");
+                return;
+            }
+
+            let data = [];
+            const header = ["期數", "月付金額", "本金", "利息", "剩餘本金"]
+
+            for (let i = 0; i < schedules.length; i++) {
+                data.push(
+                    [
+                        schedules[i].month,
+                        schedules[i].monthlyPayment + schedules[i].interest,
+                        schedules[i].monthlyPayment,
+                        schedules[i].interest,
+                        schedules[i].amount,
+                    ]
+                );
+            }
+
+            console.log(data);
+            downloadCSV(header, data);
+
+        });
+
 
         //區域
         clacBtnEl.addEventListener("click", function (e) {
@@ -274,11 +170,34 @@
 
             console.log(amount, rate, loanYears, method);
 
-            let schedules = repaymentMethod1(amount * 10000, rate, loanYears);
+            schedules = repaymentMethod1(amount * 10000, rate, loanYears);
 
+            renderSummary(schedules);
             renderTable(schedules);
 
         });
+
+        //總結欄位資訊
+        function renderSummary(schedules) {
+            const monthlyPaymentEl = document.querySelector("#monthlyPayment")
+            const totalPaymentE1 = document.querySelector("#totalPayment")
+            const totalInterestE1 = document.querySelector("#totalInterest")
+
+            console.log(monthlyPaymentEl, totalInterestE1, totalInterestE1);
+
+            monthlyPaymentEl.innerText = `${schedules[0].monthlyPayment + schedules[0].interest}元`;
+
+            let totalInterest = 0, totalPayment = 0;
+            for (let i = 0; i < schedules.length; i++) {
+                totalInterest += schedules[i].interest;
+                totalPayment += schedules[i].monthlyPayment;
+            }
+
+            console.log(totalInterest, totalPayment);
+
+            totalPaymentE1.innerHTML = `<b style='color:blue'>${totalPayment + totalInterest}元</b>`;
+            totalInterestE1.innerHTML = `<b style='color:red'>${totalInterest}元</b>`;
+        }
 
         //繪製Table
         function renderTable(schedules) {
@@ -322,7 +241,7 @@
                     amount = 0;
                 }
 
-                console.log(`${i + 1}本金: ${monthlyPayment}，利息: ${interest}，剩餘本金:${amount}`);
+                console.log(`${i + 1} 本金: ${monthlyPayment}，利息: ${interest}，剩餘本金:${amount}`);
                 schedules.push(
                     {
                         "month": i + 1,
